@@ -1,10 +1,6 @@
-import type {
-  DecodeRequest,
-  MessageFromBackground,
-  MessageFromContent,
-} from '../shared/types';
-import { streamExplanation } from './claude';
-import { getSettings } from './storage';
+import type { DecodeRequest, MessageFromContent } from '../shared/types';
+import { PENDING_REQUEST_KEY } from '../shared/types';
+import { getSettings } from '../shared/storage';
 
 const CONTEXT_MENU_ID = 'decode-explain-selection';
 
@@ -21,38 +17,51 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== CONTEXT_MENU_ID || !tab?.id) return;
 
   const code = info.selectionText?.trim() ?? '';
   if (!code) return;
 
-  await triggerDecode(tab.id, {
+  void handleTrigger(tab.id, {
     code,
     language: null,
     sourceUrl: info.pageUrl ?? '',
-    mode: (await getSettings()).defaultMode,
   });
 });
 
-chrome.commands.onCommand.addListener(async (command, tab) => {
+chrome.commands.onCommand.addListener((command, tab) => {
   if (command !== 'decode-selection' || !tab?.id) return;
-
-  const response = await chrome.tabs
-    .sendMessage(tab.id, { type: 'PING' } satisfies MessageFromContent)
-    .catch(() => null);
-
-  if (!response) return;
+  void chrome.tabs.sendMessage(tab.id, { type: 'PING' } satisfies MessageFromContent).catch(() => null);
 });
 
 chrome.runtime.onMessage.addListener((message: MessageFromContent, sender) => {
   if (message.type !== 'DECODE_SELECTION') return;
   if (!sender.tab?.id) return;
 
-  void triggerDecode(sender.tab.id, message.payload);
+  void handleTrigger(sender.tab.id, {
+    code: message.payload.code,
+    language: message.payload.language,
+    sourceUrl: message.payload.sourceUrl,
+  });
 });
 
-async function triggerDecode(tabId: number, payload: DecodeRequest): Promise<void> {
+function handleTrigger(
+  tabId: number,
+  partial: { code: string; language: string | null; sourceUrl: string }
+): Promise<void> {
+  chrome.sidePanel.open({ tabId }).catch((err) => {
+    console.error('[Decode] sidePanel.open failed', err);
+  });
+
+  return stashPendingRequest(partial);
+}
+
+async function stashPendingRequest(partial: {
+  code: string;
+  language: string | null;
+  sourceUrl: string;
+}): Promise<void> {
   const settings = await getSettings();
 
   if (!settings.apiKey) {
@@ -60,26 +69,13 @@ async function triggerDecode(tabId: number, payload: DecodeRequest): Promise<voi
     return;
   }
 
-  await chrome.sidePanel.open({ tabId });
+  const request: DecodeRequest = {
+    requestId: crypto.randomUUID(),
+    code: partial.code,
+    language: partial.language,
+    sourceUrl: partial.sourceUrl,
+    mode: settings.defaultMode,
+  };
 
-  await sendToPanel({ type: 'DECODE_START', payload });
-
-  await streamExplanation({
-    apiKey: settings.apiKey,
-    model: settings.model,
-    mode: payload.mode,
-    code: payload.code,
-    language: payload.language,
-    sourceUrl: payload.sourceUrl,
-    onChunk: (text) => void sendToPanel({ type: 'DECODE_CHUNK', payload: { text } }),
-    onDone: () => void sendToPanel({ type: 'DECODE_DONE' }),
-    onError: (message) =>
-      void sendToPanel({ type: 'DECODE_ERROR', payload: { message } }),
-  });
-}
-
-async function sendToPanel(message: MessageFromBackground): Promise<void> {
-  await chrome.runtime.sendMessage(message).catch(() => {
-    // panel may not be ready yet — fail silently
-  });
+  await chrome.storage.session.set({ [PENDING_REQUEST_KEY]: request });
 }

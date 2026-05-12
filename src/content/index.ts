@@ -19,7 +19,6 @@ chrome.runtime.onMessage.addListener((message: MessageFromContent, _sender, send
       code,
       language,
       sourceUrl: window.location.href,
-      mode: 'normal',
     },
   } satisfies MessageFromContent);
 
