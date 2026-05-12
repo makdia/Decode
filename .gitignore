@@ -27,5 +27,10 @@ lerna-debug.log*
 .env.*.local
 
 decode.zip
+decode-v*.zip
 *.crx
 *.pem
+
+# Raw recordings — keep optimized .mp4/.gif in docs/ instead
+*.mov
+*.MOV

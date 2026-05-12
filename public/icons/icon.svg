@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Decode icon">
+  <title>Decode</title>
+  <rect width="128" height="128" rx="24" fill="#2563eb"/>
+  <g fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M44 38 Q36 38 36 46 L36 56 Q36 64 28 64 Q36 64 36 72 L36 82 Q36 90 44 90"/>
+    <path d="M84 38 Q92 38 92 46 L92 56 Q92 64 100 64 Q92 64 92 72 L92 82 Q92 90 84 90"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round">
+    <circle cx="78" cy="78" r="14" fill="#2563eb"/>
+    <line x1="89" y1="89" x2="102" y2="102"/>
+  </g>
+</svg>
