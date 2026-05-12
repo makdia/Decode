@@ -1,10 +1,19 @@
 export type ExplainMode = 'normal' | 'eli5';
 
+export type Provider = 'anthropic' | 'groq';
+
 export type ClaudeModel = 'claude-haiku-4-5' | 'claude-sonnet-4-6' | 'claude-opus-4-7';
 
+export type GroqModel = 'llama-3.3-70b-versatile' | 'llama-3.1-8b-instant';
+
+export type ModelId = ClaudeModel | GroqModel;
+
 export interface DecodeSettings {
-  apiKey: string;
-  model: ClaudeModel;
+  provider: Provider;
+  anthropicApiKey: string;
+  groqApiKey: string;
+  anthropicModel: ClaudeModel;
+  groqModel: GroqModel;
   defaultMode: ExplainMode;
 }
 
@@ -16,8 +25,6 @@ export interface DecodeRequest {
   mode: ExplainMode;
 }
 
-export const PENDING_REQUEST_KEY = 'decode.pending';
-
 export interface NotebookEntry {
   id: string;
   code: string;
@@ -27,6 +34,8 @@ export interface NotebookEntry {
   mode: ExplainMode;
   savedAt: string;
 }
+
+export const PENDING_REQUEST_KEY = 'decode.pending';
 
 export interface SelectionPayload {
   code: string;
@@ -45,7 +54,18 @@ export type MessageFromBackground =
   | { type: 'DECODE_ERROR'; payload: { message: string } };
 
 export const DEFAULT_SETTINGS: DecodeSettings = {
-  apiKey: '',
-  model: 'claude-haiku-4-5',
+  provider: 'anthropic',
+  anthropicApiKey: '',
+  groqApiKey: '',
+  anthropicModel: 'claude-haiku-4-5',
+  groqModel: 'llama-3.3-70b-versatile',
   defaultMode: 'normal',
 };
+
+export function getActiveApiKey(s: DecodeSettings): string {
+  return s.provider === 'groq' ? s.groqApiKey : s.anthropicApiKey;
+}
+
+export function getActiveModel(s: DecodeSettings): ModelId {
+  return s.provider === 'groq' ? s.groqModel : s.anthropicModel;
+}
