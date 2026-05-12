@@ -38,12 +38,19 @@ export default function OptionsApp() {
   };
 
   const save = async () => {
-    await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+    const cleaned: DecodeSettings = {
+      ...settings,
+      anthropicApiKey: settings.anthropicApiKey.trim(),
+      groqApiKey: settings.groqApiKey.trim(),
+    };
+    setSettings(cleaned);
+    await chrome.storage.local.set({ [SETTINGS_KEY]: cleaned });
     setSavedAt(Date.now());
   };
 
-  const activeKey =
-    settings.provider === 'groq' ? settings.groqApiKey : settings.anthropicApiKey;
+  const activeKey = (
+    settings.provider === 'groq' ? settings.groqApiKey : settings.anthropicApiKey
+  ).trim();
   const canSave = activeKey.length > 0;
 
   if (!loaded) {
