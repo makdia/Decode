@@ -9,11 +9,14 @@ export interface DecodeSettings {
 }
 
 export interface DecodeRequest {
+  requestId: string;
   code: string;
   language: string | null;
   sourceUrl: string;
   mode: ExplainMode;
 }
+
+export const PENDING_REQUEST_KEY = 'decode.pending';
 
 export interface NotebookEntry {
   id: string;
