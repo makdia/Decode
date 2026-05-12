@@ -1,5 +1,5 @@
 import type { DecodeRequest, MessageFromContent } from '../shared/types';
-import { PENDING_REQUEST_KEY } from '../shared/types';
+import { PENDING_REQUEST_KEY, getActiveApiKey } from '../shared/types';
 import { getSettings } from '../shared/storage';
 
 const CONTEXT_MENU_ID = 'decode-explain-selection';
@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   });
 
   const settings = await getSettings();
-  if (!settings.apiKey) {
+  if (!getActiveApiKey(settings)) {
     chrome.runtime.openOptionsPage();
   }
 });
@@ -64,7 +64,7 @@ async function stashPendingRequest(partial: {
 }): Promise<void> {
   const settings = await getSettings();
 
-  if (!settings.apiKey) {
+  if (!getActiveApiKey(settings)) {
     chrome.runtime.openOptionsPage();
     return;
   }
