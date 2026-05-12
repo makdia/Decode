@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.prose-decode {
+  @apply text-sm leading-relaxed text-slate-800;
+}
+
+.prose-decode h2 {
+  @apply mt-4 mb-1 text-base font-semibold text-slate-900;
+}
+
+.prose-decode p {
+  @apply my-2;
+}
+
+.prose-decode code {
+  @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-[12px] text-slate-800;
+}
+
+.prose-decode pre {
+  @apply my-3 overflow-x-auto rounded-md bg-slate-900 p-3 text-[12px] text-slate-50;
+}
+
+.prose-decode pre code {
+  @apply bg-transparent p-0 text-slate-50;
+}
+
+.prose-decode ul {
+  @apply my-2 list-disc pl-5;
+}
+
+.prose-decode strong {
+  @apply font-semibold text-slate-900;
+}
