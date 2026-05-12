@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import type {
-  DecodeRequest,
-  ExplainMode,
-  MessageFromBackground,
-} from '../shared/types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { DecodeRequest, ExplainMode } from '../shared/types';
+import { PENDING_REQUEST_KEY } from '../shared/types';
+import { getSettings } from '../shared/storage';
+import { streamExplanation } from '../shared/claude';
 import CodeBlock from './components/CodeBlock';
 import Explanation from './components/Explanation';
 import EmptyState from './components/EmptyState';
@@ -15,38 +14,67 @@ export default function App() {
   const [explanation, setExplanation] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
+  const lastProcessedId = useRef<string | null>(null);
 
-  useEffect(() => {
-    const handler = (message: MessageFromBackground) => {
-      switch (message.type) {
-        case 'DECODE_START':
-          setRequest(message.payload);
-          setExplanation('');
-          setError(null);
-          setStatus('streaming');
-          break;
-        case 'DECODE_CHUNK':
-          setExplanation((prev) => prev + message.payload.text);
-          break;
-        case 'DECODE_DONE':
-          setStatus('done');
-          break;
-        case 'DECODE_ERROR':
-          setError(message.payload.message);
-          setStatus('error');
-          break;
-      }
-    };
+  const runDecode = useCallback(async (req: DecodeRequest) => {
+    setRequest(req);
+    setExplanation('');
+    setError(null);
+    setStatus('streaming');
 
-    chrome.runtime.onMessage.addListener(handler);
-    return () => chrome.runtime.onMessage.removeListener(handler);
+    const settings = await getSettings();
+    if (!settings.apiKey) {
+      setError('Missing API key. Open the extension settings to add one.');
+      setStatus('error');
+      return;
+    }
+
+    await streamExplanation({
+      apiKey: settings.apiKey,
+      model: settings.model,
+      mode: req.mode,
+      code: req.code,
+      language: req.language,
+      sourceUrl: req.sourceUrl,
+      onChunk: (text) => setExplanation((prev) => prev + text),
+      onDone: () => setStatus('done'),
+      onError: (message) => {
+        setError(message);
+        setStatus('error');
+      },
+    });
   }, []);
 
-  const toggleMode = () => {
+  useEffect(() => {
+    const checkPending = async () => {
+      const result = await chrome.storage.session.get(PENDING_REQUEST_KEY);
+      const pending = result[PENDING_REQUEST_KEY] as DecodeRequest | undefined;
+      if (!pending) return;
+      if (lastProcessedId.current === pending.requestId) return;
+
+      lastProcessedId.current = pending.requestId;
+      await runDecode(pending);
+    };
+
+    void checkPending();
+
+    const listener = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      areaName: string
+    ) => {
+      if (areaName !== 'session') return;
+      if (!changes[PENDING_REQUEST_KEY]?.newValue) return;
+      void checkPending();
+    };
+
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, [runDecode]);
+
+  const toggleMode = async () => {
     if (!request) return;
     const nextMode: ExplainMode = request.mode === 'eli5' ? 'normal' : 'eli5';
-    setRequest({ ...request, mode: nextMode });
-    // Re-run is wired in v2 — for now this just toggles the label
+    await runDecode({ ...request, mode: nextMode, requestId: crypto.randomUUID() });
   };
 
   if (!request) {
@@ -68,6 +96,7 @@ export default function App() {
           onClick={toggleMode}
           className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
           aria-pressed={request.mode === 'eli5'}
+          disabled={status === 'streaming'}
         >
           {request.mode === 'eli5' ? 'ELI5: on' : 'ELI5: off'}
         </button>
@@ -97,8 +126,16 @@ export default function App() {
       </main>
 
       <footer className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500">
-        Powered by Claude · {request.sourceUrl ? new URL(request.sourceUrl).hostname : 'unknown'}
+        Powered by Claude · {request.sourceUrl ? safeHost(request.sourceUrl) : 'unknown'}
       </footer>
     </div>
   );
+}
+
+function safeHost(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return 'unknown';
+  }
 }

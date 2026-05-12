@@ -28,8 +28,14 @@ export interface NotebookEntry {
   savedAt: string;
 }
 
+export interface SelectionPayload {
+  code: string;
+  language: string | null;
+  sourceUrl: string;
+}
+
 export type MessageFromContent =
-  | { type: 'DECODE_SELECTION'; payload: DecodeRequest }
+  | { type: 'DECODE_SELECTION'; payload: SelectionPayload }
   | { type: 'PING' };
 
 export type MessageFromBackground =
