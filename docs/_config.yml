@@ -1,0 +1,17 @@
+title: Decode
+description: Highlight any code on the web → get a plain-English explanation. Powered by Claude.
+url: https://makdia.github.io
+baseurl: /Decode
+theme: minima
+
+exclude:
+  - web-store/
+  - demo.mov
+  - demo.mp4
+
+plugins:
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true
