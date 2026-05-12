@@ -2,6 +2,10 @@
 
 > Highlight any code on the web → get a plain-English explanation. Powered by Claude.
 
+<p align="center">
+  <video src="https://github.com/makdia/Decode/raw/main/docs/demo.mp4" controls width="720"></video>
+</p>
+
 Decode is a Chrome extension built for people learning to code. Highlight a confusing snippet on GitHub, Stack Overflow, MDN, a blog — anywhere — right-click, and a side panel slides in with a plain-English explanation streamed from Claude.
 
 ## Features
