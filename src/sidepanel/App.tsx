@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DecodeRequest, ExplainMode } from '../shared/types';
-import { PENDING_REQUEST_KEY } from '../shared/types';
+import { PENDING_REQUEST_KEY, getActiveApiKey, getActiveModel } from '../shared/types';
 import { getSettings } from '../shared/storage';
-import { streamExplanation } from '../shared/claude';
+import { streamExplanation } from '../shared/llm';
 import CodeBlock from './components/CodeBlock';
 import Explanation from './components/Explanation';
 import EmptyState from './components/EmptyState';
@@ -23,15 +23,19 @@ export default function App() {
     setStatus('streaming');
 
     const settings = await getSettings();
-    if (!settings.apiKey) {
-      setError('Missing API key. Open the extension settings to add one.');
+    const apiKey = getActiveApiKey(settings);
+    if (!apiKey) {
+      setError(
+        `Missing ${settings.provider === 'groq' ? 'Groq' : 'Anthropic'} API key. Open the extension settings to add one.`
+      );
       setStatus('error');
       return;
     }
 
     await streamExplanation({
-      apiKey: settings.apiKey,
-      model: settings.model,
+      provider: settings.provider,
+      apiKey,
+      model: getActiveModel(settings),
       mode: req.mode,
       code: req.code,
       language: req.language,
