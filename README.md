@@ -11,8 +11,22 @@ Decode is a Chrome extension built for people learning to code. Highlight a conf
 - **Streaming responses** — no waiting for a wall of text
 - **ELI5 mode** — explanations using everyday analogies
 - **Language auto-detection** from page markup (works on GitHub, Stack Overflow, MDN, Prism, highlight.js)
-- **Your API key, your bill** — stored locally, never sent anywhere except Anthropic
-- **Tiny cost** — ~$0.001 per explanation on Haiku 4.5
+- **Two providers** — Anthropic Claude (paid) or Groq Llama 3.3 70B (free tier)
+- **Your API key, your bill** — stored locally, never sent anywhere except the provider you pick
+- **Tiny cost** — ~$0.001 per explanation on Claude Haiku 4.5, or $0 on Groq's free tier
+
+## Providers
+
+Decode supports two LLM providers — pick one in the options page.
+
+| | Anthropic (Claude) | Groq (Llama) |
+|---|---|---|
+| **Cost** | Paid — ~$0.001 / explanation | Free tier |
+| **Sign up** | [console.anthropic.com](https://console.anthropic.com/settings/keys) (card required) | [console.groq.com](https://console.groq.com/keys) (no card) |
+| **Quality** | Highest — best at code explanation | Strong, especially Llama 3.3 70B |
+| **Speed** | Fast | Very fast (Groq's specialty) |
+
+The README and screenshots use Claude. Groq is there so you can develop and demo the extension at zero cost.
 
 ## Install (development)
 
