@@ -12,9 +12,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:firefox": "node scripts/build-firefox.mjs",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "zip": "pnpm build && cd dist && zip -r ../decode.zip ."
+    "zip": "npm run build && cd dist && zip -r ../decode.zip .",
+    "zip:firefox": "npm run build:firefox && cd dist-firefox && zip -r ../decode-firefox.zip ."
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
