@@ -1,6 +1,7 @@
 import type { DecodeRequest, MessageFromContent } from '../shared/types';
 import { PENDING_REQUEST_KEY, getActiveApiKey } from '../shared/types';
 import { getSettings } from '../shared/storage';
+import { openSidePanel } from '../shared/browser';
 
 const CONTEXT_MENU_ID = 'decode-explain-selection';
 
@@ -50,8 +51,8 @@ function handleTrigger(
   tabId: number,
   partial: { code: string; language: string | null; sourceUrl: string }
 ): Promise<void> {
-  chrome.sidePanel.open({ tabId }).catch((err) => {
-    console.error('[Decode] sidePanel.open failed', err);
+  openSidePanel(tabId).catch((err) => {
+    console.error('[Decode] openSidePanel failed', err);
   });
 
   return stashPendingRequest(partial);
